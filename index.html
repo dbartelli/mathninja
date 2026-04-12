@@ -24,8 +24,11 @@
       --font:  system-ui, -apple-system, sans-serif;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      height: 100%;
+    html {
+      height: 100%; overflow: hidden;
+    }
+    body {
+      height: 100%; overflow: hidden;
       background: var(--bg);
       color: var(--text);
       font-family: var(--font);
@@ -34,7 +37,7 @@
       position: fixed;
       width: 100%;
     }
-    .screen { display: none; min-height: 100vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .screen { display: none; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .screen.active { display: block; }
     button, input { touch-action: manipulation; }
     .container {
@@ -293,7 +296,7 @@
       <div class="brand">
         <div class="brand-ninja">🥷</div>
         <h1 class="brand-title">MATHNINJA</h1>
-        <p class="brand-tagline">⚔️ Welcome to Diego's Math Dojo. Select your training. ⚔️</p>
+        <p class="brand-tagline">⚔️ Welcome to Diego's Math Dojo ⚔️</p>
       </div>
       <hr class="divider">
 
@@ -623,10 +626,11 @@
       saveSettings();
     });
 
-    // Wire dojo button
+    // Wire dojo button — focus must happen synchronously inside the gesture for iOS
     document.getElementById('dojo-btn').addEventListener('click', () => {
       if (settings.numbers.length < 2) return;
       enterDojo();
+      document.getElementById('answer-input').focus();
     });
 
     // ── Audio ─────────────────────────────────────────────────────
@@ -637,6 +641,9 @@
         try {
           audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         } catch(e) { audioCtx = null; }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
       }
     }
 
@@ -1002,13 +1009,9 @@
       eq.className = 'problem-eq';
 
       hideFeedback();
-      const input = document.getElementById('answer-input');
-      input.value = '';
-      input.disabled = false;
+      document.getElementById('answer-input').value = '';
       session.inputLocked = false;
       updateProgressUI();
-
-      setTimeout(() => input.focus(), 50);
     }
 
     function currentProblem() {
@@ -1019,7 +1022,13 @@
     const answerInput = document.getElementById('answer-input');
 
     answerInput.addEventListener('input', () => {
+      if (session.inputLocked) { answerInput.value = ''; return; }
       answerInput.value = answerInput.value.replace(/\D/g, '').slice(0, 3);
+    });
+
+    // Prevent iOS from scrolling the layout when the keyboard opens
+    answerInput.addEventListener('focus', () => {
+      setTimeout(() => window.scrollTo(0, 0), 50);
     });
 
     answerInput.addEventListener('keydown', e => {
@@ -1090,7 +1099,7 @@
 
     function lockAndAdvance(delay) {
       session.inputLocked = true;
-      document.getElementById('answer-input').disabled = true;
+      document.getElementById('answer-input').value = '';
       setTimeout(() => {
         if (isSessionOver()) { endSession(); return; }
         loadNextProblem();
