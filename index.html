@@ -504,6 +504,14 @@
         const btn = e.target.closest('.num-btn');
         if (btn) toggleNumber(Number(btn.dataset.num));
       });
+
+      // Tap sounds on key buttons
+      ['op-toggle', 'st-toggle', 'number-grid', 'stepper-minus', 'stepper-plus',
+       'sound-toggle-row', 'exit-btn', 'overlay-cancel', 'overlay-leave',
+       'train-again-btn', 'results-settings-btn'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', playTap);
+      });
     });
 
     // ── Number grid ───────────────────────────────────────────────
@@ -606,15 +614,63 @@
       enterDojo();
     });
 
-    // ── Audio stubs (replaced in Task 11) ────────────────────────
+    // ── Audio ─────────────────────────────────────────────────────
     let audioCtx = null;
-    function initAudio() {}
-    function playCorrect()   {}
-    function playWrong1()    {}
-    function playReveal()    {}
-    function playMilestone() {}
-    function playComplete()  {}
-    function playTap()       {}
+
+    function initAudio() {
+      if (!audioCtx) {
+        try {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch(e) { audioCtx = null; }
+      }
+    }
+
+    function playTone(freq, dur, type = 'sine', vol = 0.28, delay = 0) {
+      if (settings.muted || !audioCtx) return;
+      try {
+        const osc  = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + dur);
+        osc.start(audioCtx.currentTime + delay);
+        osc.stop(audioCtx.currentTime  + delay + dur + 0.05);
+      } catch(e) { /* ignore if audio context suspended */ }
+    }
+
+    function playCorrect() {
+      playTone(523, 0.10, 'sine', 0.25, 0.00); // C5
+      playTone(659, 0.12, 'sine', 0.25, 0.10); // E5
+      playTone(784, 0.18, 'sine', 0.25, 0.20); // G5
+    }
+
+    function playWrong1() {
+      playTone(330, 0.12, 'sine', 0.20, 0.00); // E4
+      playTone(294, 0.18, 'sine', 0.20, 0.13); // D4
+    }
+
+    function playReveal() {
+      playTone(262, 0.35, 'sine', 0.18); // C4 — low and soft
+    }
+
+    function playMilestone() {
+      [523, 659, 784, 1047].forEach((f, i) =>
+        playTone(f, 0.14 + i * 0.03, 'sine', 0.28, i * 0.11)
+      );
+    }
+
+    function playComplete() {
+      [523, 659, 784, 659, 1047].forEach((f, i) =>
+        playTone(f, 0.16 + i * 0.02, 'sine', 0.30, i * 0.13)
+      );
+    }
+
+    function playTap() {
+      playTone(800, 0.04, 'sine', 0.08);
+    }
 
     // ── Message pools ─────────────────────────────────────────────
     const MESSAGES_SOLO = [
