@@ -35,13 +35,135 @@
       margin: 0 auto;
       padding: 24px 20px 40px;
     }
+
+    /* ── Branding ── */
+    .brand { text-align: center; padding: 12px 0 20px; }
+    .brand-ninja { font-size: 52px; line-height: 1; margin-bottom: 6px; }
+    .brand-title {
+      font-size: 32px; font-weight: 900; letter-spacing: 4px;
+      color: var(--gold); text-transform: uppercase;
+    }
+    .brand-tagline {
+      font-size: 13px; font-weight: 600; color: var(--red);
+      letter-spacing: 0.5px; margin-top: 8px;
+    }
+    .divider { border: none; border-top: 1px solid var(--bg3); margin: 0 0 24px; }
+
+    /* ── Setting sections ── */
+    .setting-section { margin-bottom: 24px; }
+    .setting-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--teal); margin-bottom: 10px;
+    }
+
+    /* ── Toggle buttons ── */
+    .toggle-group { display: flex; gap: 8px; }
+    .toggle-btn {
+      flex: 1; background: var(--bg2); color: var(--muted);
+      border: 2px solid var(--bg3); border-radius: 10px;
+      padding: 12px 8px; font-size: 14px; font-weight: 800;
+      font-family: var(--font); cursor: pointer;
+      min-height: 44px; transition: all 0.15s;
+    }
+    .toggle-btn.active {
+      background: var(--red); color: white; border-color: var(--red);
+    }
+
+    /* ── Number grid ── */
+    .number-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;
+    }
+    .num-btn {
+      background: var(--bg2); color: var(--muted);
+      border: 2px solid var(--bg3); border-radius: 8px;
+      padding: 10px 0; font-size: 17px; font-weight: 800;
+      font-family: var(--font); cursor: pointer; text-align: center;
+      min-height: 44px; transition: all 0.15s;
+    }
+    .num-btn.selected { background: var(--red); color: white; border-color: var(--red); }
+    .grid-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: 8px; }
+
+    /* ── Session stepper ── */
+    .session-row { display: flex; gap: 12px; align-items: center; }
+    .stepper { display: flex; align-items: center; gap: 10px; }
+    .stepper-btn {
+      background: var(--bg2); color: var(--text); border: 2px solid var(--bg3);
+      border-radius: 8px; width: 44px; height: 44px; font-size: 22px;
+      font-weight: 700; font-family: var(--font); cursor: pointer; line-height: 1;
+    }
+    .stepper-val { font-size: 22px; font-weight: 900; min-width: 48px; text-align: center; }
+
+    /* ── Enter Dojo button ── */
+    .dojo-btn {
+      width: 100%; padding: 18px; font-size: 20px; font-weight: 900;
+      font-family: var(--font); letter-spacing: 2px; color: white;
+      background: linear-gradient(135deg, var(--red), #c23152);
+      border: none; border-radius: 14px; cursor: pointer; margin-top: 8px;
+      box-shadow: 0 4px 20px rgba(233,69,96,0.4);
+      min-height: 56px; transition: opacity 0.15s;
+    }
+    .dojo-btn:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
+
+    /* ── Sound toggle ── */
+    .sound-row {
+      text-align: center; margin-top: 14px; color: var(--muted);
+      font-size: 12px; cursor: pointer; -webkit-user-select: none; user-select: none;
+    }
   </style>
 </head>
 <body>
 
   <div id="screen-settings" class="screen active">
     <div class="container">
-      <p style="color:var(--teal)">Settings screen — coming soon</p>
+
+      <!-- Branding -->
+      <div class="brand">
+        <div class="brand-ninja">🥷</div>
+        <h1 class="brand-title">MATHNINJA</h1>
+        <p class="brand-tagline">⚔️ Welcome to Diego's Math Dojo. Select your training. ⚔️</p>
+      </div>
+      <hr class="divider">
+
+      <!-- Operation mode -->
+      <div class="setting-section">
+        <div class="setting-label">⚡ Operation</div>
+        <div class="toggle-group" id="op-toggle">
+          <button type="button" class="toggle-btn active" data-op="multiply">✖️ Multiply</button>
+          <button type="button" class="toggle-btn" data-op="divide">➗ Divide</button>
+          <button type="button" class="toggle-btn" data-op="mix">🔀 Mix</button>
+        </div>
+      </div>
+
+      <!-- Numbers to train -->
+      <div class="setting-section">
+        <div class="setting-label">🎯 Numbers to Train</div>
+        <div class="number-grid" id="number-grid"></div>
+        <p class="grid-hint">Select at least 2 numbers</p>
+      </div>
+
+      <!-- Session length -->
+      <div class="setting-section">
+        <div class="setting-label">⏱ Session Length</div>
+        <div class="session-row">
+          <div class="toggle-group" id="st-toggle">
+            <button type="button" class="toggle-btn active" data-st="problems">📋 Problems</button>
+            <button type="button" class="toggle-btn" data-st="time">⏱ Time</button>
+          </div>
+          <div class="stepper">
+            <button type="button" class="stepper-btn" id="stepper-minus">−</button>
+            <span class="stepper-val" id="session-display">20</span>
+            <button type="button" class="stepper-btn" id="stepper-plus">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Enter Dojo -->
+      <button type="button" class="dojo-btn" id="dojo-btn">⚔️ ENTER DOJO ⚔️</button>
+      <div class="sound-row" id="sound-toggle-row">
+        <span id="sound-icon">🔊</span>
+        <span id="sound-label">Sound On</span>
+      </div>
+
     </div>
   </div>
 
