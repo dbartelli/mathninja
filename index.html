@@ -511,6 +511,30 @@
       syncSettingsUI();
       saveSettings();
     });
+
+    // Wire dojo button
+    document.getElementById('dojo-btn').addEventListener('click', () => {
+      if (settings.numbers.length < 2) return;
+      enterDojo();
+    });
+
+    // ── Audio stubs (replaced in Task 11) ────────────────────────
+    let audioCtx = null;
+    function initAudio() {}
+    function playCorrect()   {}
+    function playWrong1()    {}
+    function playReveal()    {}
+    function playMilestone() {}
+    function playComplete()  {}
+    function playTap()       {}
+
+    // ── Message stubs (replaced in Task 8) ───────────────────────
+    function getFeedbackMessage() { return '✅ Correct!'; }
+    function getStreakSub()       { return ''; }
+
+    // ── Session end stub (replaced in Task 9) ────────────────────
+    function endSession() {}
+
     // ── Utilities ────────────────────────────────────────────────
     function shuffle(arr) {
       const a = [...arr];
@@ -558,6 +582,209 @@
       }
       return shuffle(problems);
     }
+
+    // ── Session state ─────────────────────────────────────────────
+    let session = {
+      deck: [], deckIndex: 0, tries: 0,
+      streak: 0, bestStreak: 0,
+      firstTryCorrect: 0, secondTryCorrect: 0, revealed: 0,
+      revealedFacts: [], attempted: 0,
+      timeRemaining: 0, timerInterval: null, timerExpired: false,
+      inputLocked: false,
+      msgPool: [], msgIndex: 0,
+    };
+
+    function enterDojo() {
+      if (settings.numbers.length < 2) return;
+      saveSettings();
+      initAudio();
+
+      session.deck = buildDeck(settings.operation, settings.numbers);
+      session.deckIndex = 0;
+      session.tries = 0; session.streak = 0; session.bestStreak = 0;
+      session.firstTryCorrect = 0; session.secondTryCorrect = 0;
+      session.revealed = 0; session.revealedFacts = [];
+      session.attempted = 0; session.inputLocked = false;
+      session.timerExpired = false;
+      if (session.timerInterval) clearInterval(session.timerInterval);
+      session.timerInterval = null;
+      session.msgPool = []; session.msgIndex = 0;
+
+      if (settings.sessionType === 'time') {
+        session.timeRemaining = settings.sessionValue * 60;
+      }
+
+      showScreen('screen-practice');
+      loadNextProblem();
+      if (settings.sessionType === 'time') startTimer();
+    }
+
+    // ── loadNextProblem ───────────────────────────────────────────
+    function loadNextProblem() {
+      if (session.deckIndex >= session.deck.length) {
+        session.deck = buildDeck(settings.operation, settings.numbers);
+        session.deckIndex = 0;
+      }
+      const p = session.deck[session.deckIndex];
+      session.tries = 0;
+
+      const opNames = { multiply:'MULTIPLICATION', divide:'DIVISION', mix:'MIXED' };
+      document.getElementById('op-label').textContent = opNames[p.type] || 'MULTIPLICATION';
+      document.getElementById('problem-text').textContent = p.display;
+
+      const eq = document.getElementById('problem-eq');
+      eq.textContent = '= ?';
+      eq.className = 'problem-eq';
+
+      hideFeedback();
+      const input = document.getElementById('answer-input');
+      input.value = '';
+      input.disabled = false;
+      session.inputLocked = false;
+      document.getElementById('input-hint').style.visibility = 'visible';
+      updateProgressUI();
+
+      setTimeout(() => input.focus(), 50);
+    }
+
+    function currentProblem() {
+      return session.deck[session.deckIndex];
+    }
+
+    // ── Input filtering and submission ────────────────────────────
+    const answerInput = document.getElementById('answer-input');
+
+    answerInput.addEventListener('input', () => {
+      answerInput.value = answerInput.value.replace(/\D/g, '').slice(0, 3);
+    });
+
+    answerInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !session.inputLocked) submitAnswer();
+    });
+
+    answerInput.addEventListener('blur', () => {
+      if (!session.inputLocked && answerInput.value.length > 0) submitAnswer();
+    });
+
+    // ── submitAnswer ──────────────────────────────────────────────
+    function submitAnswer() {
+      const input = document.getElementById('answer-input');
+      const raw = input.value.trim();
+      if (!raw) return;
+      const guess = parseInt(raw, 10);
+      const p = currentProblem();
+      session.tries++;
+
+      if (guess === p.answer) {
+        if (session.tries === 1) {
+          session.firstTryCorrect++;
+          session.streak++;
+          if (session.streak > session.bestStreak) session.bestStreak = session.streak;
+        } else {
+          session.secondTryCorrect++;
+        }
+        session.attempted++;
+        session.deckIndex++;
+
+        const eq = document.getElementById('problem-eq');
+        eq.textContent = `= ${p.answer} ✓`;
+        eq.className = 'problem-eq correct';
+
+        showFeedback('correct', getFeedbackMessage(), getStreakSub());
+        playCorrect();
+        lockAndAdvance(1200);
+
+      } else if (session.tries < 2) {
+        input.value = '';
+        triggerShake();
+        showFeedback('wrong', 'Try Again! 💪', '1 try left');
+        playWrong1();
+
+      } else {
+        session.revealed++;
+        session.streak = 0;
+        session.attempted++;
+        session.revealedFacts.push(p.key);
+        session.deckIndex++;
+
+        const eq = document.getElementById('problem-eq');
+        eq.textContent = `= ${p.answer} 💡`;
+        eq.className = 'problem-eq reveal';
+
+        showFeedback('reveal', `The answer is ${p.answer}!`, "You'll get it next time 🥷");
+        playReveal();
+        lockAndAdvance(1800);
+      }
+
+      updateProgressUI();
+      updateStreakUI();
+    }
+
+    function lockAndAdvance(delay) {
+      session.inputLocked = true;
+      document.getElementById('answer-input').disabled = true;
+      document.getElementById('input-hint').style.visibility = 'hidden';
+      setTimeout(() => {
+        if (isSessionOver()) { endSession(); return; }
+        loadNextProblem();
+      }, delay);
+    }
+
+    function isSessionOver() {
+      if (session.timerExpired) return true;
+      if (settings.sessionType === 'problems') {
+        return session.attempted >= settings.sessionValue;
+      }
+      return false;
+    }
+
+    // ── UI helpers ────────────────────────────────────────────────
+    function showFeedback(type, main, sub) {
+      const bubble = document.getElementById('feedback-bubble');
+      bubble.className = `feedback-bubble ${type} visible`;
+      document.getElementById('fb-main').textContent = main;
+      document.getElementById('fb-sub').textContent = sub || '';
+    }
+
+    function hideFeedback() {
+      document.getElementById('feedback-bubble').className = 'feedback-bubble';
+    }
+
+    function triggerShake() {
+      const input = document.getElementById('answer-input');
+      input.classList.remove('shake');
+      void input.offsetWidth;
+      input.classList.add('shake');
+    }
+
+    function updateStreakUI() {
+      const badge = document.getElementById('streak-badge');
+      document.getElementById('streak-count').textContent = session.streak;
+      badge.classList.toggle('hidden', session.streak < 2);
+    }
+
+    function updateProgressUI() {
+      if (settings.sessionType === 'problems') {
+        document.getElementById('progress-label').textContent =
+          `${session.attempted} / ${settings.sessionValue}`;
+        const pct = (session.attempted / settings.sessionValue) * 100;
+        document.getElementById('prog-fill').style.width = pct + '%';
+      }
+    }
+
+    // ── Exit overlay ──────────────────────────────────────────────
+    document.getElementById('exit-btn').addEventListener('click', () => {
+      document.getElementById('exit-overlay').classList.add('visible');
+    });
+    document.getElementById('overlay-cancel').addEventListener('click', () => {
+      document.getElementById('exit-overlay').classList.remove('visible');
+      document.getElementById('answer-input').focus();
+    });
+    document.getElementById('overlay-leave').addEventListener('click', () => {
+      document.getElementById('exit-overlay').classList.remove('visible');
+      if (session.timerInterval) clearInterval(session.timerInterval);
+      showScreen('screen-settings');
+    });
   </script>
 
 </body>
