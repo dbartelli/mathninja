@@ -90,6 +90,7 @@
       transition: all 0.15s;
     }
     .num-btn.selected { background: var(--red); color: white; border-color: var(--red); }
+    .num-btn.all-active { border-color: var(--gold); color: var(--gold); }
     .grid-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: 8px; }
 
     /* ── Session stepper ── */
@@ -153,11 +154,7 @@
     /* ── Problem area ── */
     .problem-area {
       display: flex; flex-direction: column; align-items: center;
-      padding-top: 16px;
-    }
-    .op-label {
-      font-size: 11px; font-weight: 700; letter-spacing: 3px;
-      color: var(--muted); text-transform: uppercase; margin-bottom: 12px;
+      padding-top: 4px;
     }
     .problem-text {
       font-size: clamp(52px, 12vw, 72px); font-weight: 900;
@@ -189,8 +186,6 @@
       60%{transform:translateX(-6px)}
       80%{transform:translateX(3px)}
     }
-    .input-hint { font-size: 11px; color: var(--muted); margin-top: 8px; }
-
     /* ── Feedback bubble ── */
     .feedback-bubble {
       margin-top: 24px; border-radius: 14px; padding: 14px 20px;
@@ -364,14 +359,12 @@
 
       <!-- Problem area -->
       <div class="problem-area">
-        <div class="op-label" id="op-label">MULTIPLICATION</div>
         <div class="problem-text" id="problem-text">7 × 8</div>
         <div class="problem-eq" id="problem-eq">= ?</div>
 
         <input type="text" id="answer-input" class="answer-input"
           inputmode="numeric" autocomplete="off" autocorrect="off"
           spellcheck="false" maxlength="3" placeholder="?">
-        <div class="input-hint" id="input-hint">type your answer</div>
 
         <div class="feedback-bubble" id="feedback-bubble">
           <div class="fb-main" id="fb-main"></div>
@@ -452,7 +445,7 @@
     // ── Settings state ──────────────────────────────────────────
     let settings = {
       operation: 'multiply',
-      numbers: [2, 3, 4, 6],
+      numbers: [],
       sessionType: 'problems',
       sessionValue: 20,
       muted: false,
@@ -467,9 +460,8 @@
           if (['multiply','divide','mix'].includes(saved.operation)) {
             settings.operation = saved.operation;
           }
-          if (Array.isArray(saved.numbers) && saved.numbers.length >= 2) {
+          if (Array.isArray(saved.numbers)) {
             settings.numbers = saved.numbers.filter(n => Number.isInteger(n) && n >= 0 && n <= 12);
-            if (settings.numbers.length < 2) settings.numbers = [2, 3, 4, 6];
           }
           if (['problems','time'].includes(saved.sessionType)) {
             settings.sessionType = saved.sessionType;
@@ -505,10 +497,11 @@
       loadSettings();
       renderNumberGrid();
       syncSettingsUI();
-      // Event delegation for number grid — wired once at boot
       document.getElementById('number-grid').addEventListener('click', e => {
         const btn = e.target.closest('.num-btn');
-        if (btn) toggleNumber(Number(btn.dataset.num));
+        if (!btn) return;
+        if (btn.dataset.all) toggleAll();
+        else toggleNumber(Number(btn.dataset.num));
       });
 
       // Tap sounds on key buttons
@@ -521,6 +514,10 @@
     });
 
     // ── Number grid ───────────────────────────────────────────────
+    function allSelected() {
+      return settings.numbers.length === 13;
+    }
+
     function renderNumberGrid() {
       const grid = document.getElementById('number-grid');
       grid.innerHTML = '';
@@ -533,16 +530,28 @@
         btn.setAttribute('aria-pressed', settings.numbers.includes(n) ? 'true' : 'false');
         grid.appendChild(btn);
       }
+      const allBtn = document.createElement('button');
+      allBtn.type = 'button';
+      allBtn.className = 'num-btn' + (allSelected() ? ' all-active' : '');
+      allBtn.textContent = 'All';
+      allBtn.dataset.all = 'true';
+      allBtn.setAttribute('aria-pressed', allSelected() ? 'true' : 'false');
+      grid.appendChild(allBtn);
       updateDojoBtn();
     }
 
     function toggleNumber(n) {
       if (settings.numbers.includes(n)) {
-        if (settings.numbers.length <= 2) return; // enforce minimum of 2
         settings.numbers = settings.numbers.filter(x => x !== n);
       } else {
         settings.numbers = [...settings.numbers, n].sort((a, b) => a - b);
       }
+      renderNumberGrid();
+      saveSettings();
+    }
+
+    function toggleAll() {
+      settings.numbers = allSelected() ? [] : [0,1,2,3,4,5,6,7,8,9,10,11,12];
       renderNumberGrid();
       saveSettings();
     }
@@ -918,18 +927,16 @@
 
     function buildDivideProblems(numbers) {
       const problems = [];
-      const divisors = numbers.filter(n => n !== 0); // never divide by 0
-      for (const d of divisors) {
-        for (const f of numbers) {
-          const dividend = d * f;
-          problems.push({ type:'divide', a:dividend, b:d, answer:f,
-            display:`${dividend} ÷ ${d}`, key:`${dividend}÷${d}` });
+      const nonZero = numbers.filter(n => n !== 0);
+      for (const answer of nonZero) {
+        for (const divisor of nonZero) {
+          const dividend = answer * divisor;
+          problems.push({ type:'divide', a:dividend, b:divisor, answer,
+            display:`${dividend} ÷ ${divisor}`, key:`${dividend}÷${divisor}` });
         }
       }
       return problems;
     }
-
-    const OP_LABELS = { multiply:'MULTIPLICATION', divide:'DIVISION', mix:'MIXED' };
 
     function buildDeck(operation, numbers) {
       let problems = [];
@@ -988,7 +995,6 @@
       const p = session.deck[session.deckIndex];
       session.tries = 0;
 
-      document.getElementById('op-label').textContent = OP_LABELS[p.type];
       document.getElementById('problem-text').textContent = p.display;
 
       const eq = document.getElementById('problem-eq');
@@ -1000,7 +1006,6 @@
       input.value = '';
       input.disabled = false;
       session.inputLocked = false;
-      document.getElementById('input-hint').style.visibility = 'visible';
       updateProgressUI();
 
       setTimeout(() => input.focus(), 50);
@@ -1086,7 +1091,6 @@
     function lockAndAdvance(delay) {
       session.inputLocked = true;
       document.getElementById('answer-input').disabled = true;
-      document.getElementById('input-hint').style.visibility = 'hidden';
       setTimeout(() => {
         if (isSessionOver()) { endSession(); return; }
         loadNextProblem();
