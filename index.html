@@ -114,6 +114,123 @@
       font-size: 12px; cursor: pointer; -webkit-user-select: none; user-select: none;
       background: none; border: none; width: 100%; font-family: var(--font);
     }
+
+    /* ── Top bar ── */
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .icon-btn {
+      background: none; border: none; font-size: 22px; cursor: pointer;
+      padding: 8px; min-width: 44px; min-height: 44px;
+    }
+    .streak-badge {
+      background: var(--bg3); border-radius: 20px; padding: 4px 14px;
+      font-weight: 800; font-size: 14px; color: var(--gold);
+      transition: opacity 0.2s;
+    }
+    .streak-badge.hidden { opacity: 0; pointer-events: none; }
+    .progress-label { font-size: 13px; font-weight: 700; color: var(--muted); }
+
+    /* ── Progress bar ── */
+    .prog-track {
+      background: var(--bg2); border-radius: 4px; height: 6px;
+      margin-bottom: 36px; overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%; border-radius: 4px; width: 0%;
+      background: linear-gradient(90deg, var(--red), var(--gold));
+      transition: width 0.3s ease, background 0.5s;
+    }
+    .prog-fill.urgent { background: var(--red); }
+
+    /* ── Problem area ── */
+    .problem-area {
+      display: flex; flex-direction: column; align-items: center;
+      padding-top: 16px;
+    }
+    .op-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 3px;
+      color: var(--muted); text-transform: uppercase; margin-bottom: 12px;
+    }
+    .problem-text {
+      font-size: clamp(52px, 12vw, 72px); font-weight: 900;
+      letter-spacing: 4px; line-height: 1; color: var(--text);
+    }
+    .problem-eq {
+      font-size: clamp(52px, 12vw, 72px); font-weight: 900;
+      letter-spacing: 4px; line-height: 1; color: var(--red);
+      margin-bottom: 32px;
+    }
+    .problem-eq.correct { color: var(--green); }
+    .problem-eq.reveal  { color: var(--gold);  }
+
+    /* ── Answer input ── */
+    .answer-input {
+      background: var(--bg2); border: 3px solid var(--teal);
+      border-radius: 14px; width: 160px; padding: 14px;
+      font-size: 36px; font-weight: 900; font-family: var(--font);
+      color: var(--teal); text-align: center;
+      outline: none; transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    .answer-input.shake { animation: shake 0.3s; }
+    .answer-input:focus { border-color: var(--teal); }
+    @keyframes shake {
+      0%,100%{transform:translateX(0)}
+      20%{transform:translateX(-6px)}
+      40%{transform:translateX(6px)}
+      60%{transform:translateX(-6px)}
+      80%{transform:translateX(3px)}
+    }
+    .input-hint { font-size: 11px; color: var(--muted); margin-top: 8px; }
+
+    /* ── Feedback bubble ── */
+    .feedback-bubble {
+      margin-top: 24px; border-radius: 14px; padding: 14px 20px;
+      text-align: center; min-width: 240px; opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .feedback-bubble.visible { opacity: 1; }
+    .feedback-bubble.correct { background: rgba(74,222,128,0.15); border: 2px solid var(--green); }
+    .feedback-bubble.wrong   { background: rgba(233,69,96,0.15);  border: 2px solid var(--red);   }
+    .feedback-bubble.reveal  { background: rgba(255,209,102,0.15);border: 2px solid var(--gold);  }
+    .fb-main { font-size: 18px; font-weight: 900; }
+    .fb-sub  { font-size: 12px; margin-top: 4px; opacity: 0.8; }
+    .feedback-bubble.correct .fb-main { color: var(--green); }
+    .feedback-bubble.wrong   .fb-main { color: var(--red);   }
+    .feedback-bubble.reveal  .fb-main { color: var(--gold);  }
+    .feedback-bubble.correct .fb-sub  { color: var(--green); }
+    .feedback-bubble.wrong   .fb-sub  { color: var(--red);   }
+    .feedback-bubble.reveal  .fb-sub  { color: var(--gold);  }
+
+    /* ── Exit overlay ── */
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .overlay.visible { display: flex; }
+    .overlay-box {
+      background: var(--bg2); border: 2px solid var(--bg3);
+      border-radius: 16px; padding: 28px 24px; text-align: center;
+      max-width: 300px; width: 90%;
+    }
+    .overlay-title { font-size: 20px; font-weight: 900; margin-bottom: 8px; }
+    .overlay-sub   { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+    .overlay-btns  { display: flex; gap: 10px; }
+    .overlay-cancel {
+      flex: 1; padding: 12px; border-radius: 10px; font-weight: 800;
+      font-size: 14px; font-family: var(--font); cursor: pointer;
+      background: var(--bg3); color: var(--text); border: 2px solid var(--bg3);
+      min-height: 44px;
+    }
+    .overlay-leave {
+      flex: 1; padding: 12px; border-radius: 10px; font-weight: 800;
+      font-size: 14px; font-family: var(--font); cursor: pointer;
+      background: var(--red); color: white; border: none;
+      min-height: 44px;
+    }
   </style>
 </head>
 <body>
@@ -174,7 +291,50 @@
 
   <div id="screen-practice" class="screen">
     <div class="container">
-      <p style="color:var(--teal)">Practice screen — coming soon</p>
+
+      <!-- Top bar -->
+      <div class="top-bar">
+        <button class="icon-btn" id="exit-btn">⚙️</button>
+        <div class="streak-badge" id="streak-badge">
+          🔥 <span id="streak-count">0</span>
+        </div>
+        <div class="progress-label" id="progress-label">0 / 20</div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="prog-track">
+        <div class="prog-fill" id="prog-fill"></div>
+      </div>
+
+      <!-- Problem area -->
+      <div class="problem-area">
+        <div class="op-label" id="op-label">MULTIPLICATION</div>
+        <div class="problem-text" id="problem-text">7 × 8</div>
+        <div class="problem-eq" id="problem-eq">= ?</div>
+
+        <input type="text" id="answer-input" class="answer-input"
+          inputmode="numeric" autocomplete="off" autocorrect="off"
+          spellcheck="false" maxlength="3" placeholder="?">
+        <div class="input-hint" id="input-hint">type your answer</div>
+
+        <div class="feedback-bubble" id="feedback-bubble">
+          <div class="fb-main" id="fb-main"></div>
+          <div class="fb-sub"  id="fb-sub"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Exit confirmation overlay -->
+    <div class="overlay" id="exit-overlay">
+      <div class="overlay-box">
+        <p class="overlay-title">Leave session?</p>
+        <p class="overlay-sub">Your progress will be lost.</p>
+        <div class="overlay-btns">
+          <button class="overlay-cancel" id="overlay-cancel">Keep Training</button>
+          <button class="overlay-leave"  id="overlay-leave">Leave</button>
+        </div>
+      </div>
     </div>
   </div>
 
