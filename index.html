@@ -145,7 +145,7 @@
     /* ── Progress bar ── */
     .prog-track {
       background: var(--bg2); border-radius: 4px; height: 6px;
-      margin-bottom: 36px; overflow: hidden;
+      margin-bottom: 16px; overflow: hidden;
     }
     .prog-fill {
       height: 100%; border-radius: 4px; width: 0%;
@@ -166,7 +166,7 @@
     .problem-eq {
       font-size: clamp(52px, 12vw, 72px); font-weight: 900;
       letter-spacing: 4px; line-height: 1; color: var(--red);
-      margin-bottom: 32px;
+      margin-bottom: 16px;
     }
     .problem-eq.correct { color: var(--green); }
     .problem-eq.reveal  { color: var(--gold);  }
@@ -189,10 +189,32 @@
       60%{transform:translateX(-6px)}
       80%{transform:translateX(3px)}
     }
+    /* ── Numpad ── */
+    .numpad {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+      margin-top: 14px;
+    }
+    .numpad-btn {
+      background: var(--bg2); border: 2px solid var(--bg3);
+      border-radius: 12px; color: var(--text);
+      font-size: 26px; font-weight: 800; font-family: var(--font);
+      height: 56px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.1s;
+    }
+    .numpad-btn:active { opacity: 0.5; }
+    .numpad-submit {
+      background: linear-gradient(135deg, var(--red), var(--red-dark));
+      border-color: var(--red); color: white;
+      box-shadow: 0 2px 10px rgba(233,69,96,0.3);
+    }
+    .numpad-back { color: var(--muted); font-size: 22px; }
+
     /* ── Feedback bubble ── */
     .feedback-bubble {
-      margin-top: 24px; border-radius: 14px; padding: 14px 20px;
-      text-align: center; min-width: 240px; opacity: 0;
+      margin-top: 10px; border-radius: 14px; padding: 12px 16px;
+      text-align: center; width: 100%; opacity: 0;
+      border: 2px solid transparent;
       transition: opacity 0.2s;
     }
     .feedback-bubble.visible { opacity: 1; }
@@ -366,13 +388,29 @@
         <div class="problem-eq" id="problem-eq">= ?</div>
 
         <input type="text" id="answer-input" class="answer-input"
-          inputmode="numeric" autocomplete="off" autocorrect="off"
+          inputmode="none" autocomplete="off" autocorrect="off"
           spellcheck="false" maxlength="3" placeholder="?">
 
         <div class="feedback-bubble" id="feedback-bubble">
           <div class="fb-main" id="fb-main"></div>
           <div class="fb-sub"  id="fb-sub"></div>
         </div>
+      </div>
+
+      <!-- Custom numpad — prevents native iOS keyboard and layout shifts -->
+      <div class="numpad" id="numpad">
+        <button class="numpad-btn" data-digit="1">1</button>
+        <button class="numpad-btn" data-digit="2">2</button>
+        <button class="numpad-btn" data-digit="3">3</button>
+        <button class="numpad-btn" data-digit="4">4</button>
+        <button class="numpad-btn" data-digit="5">5</button>
+        <button class="numpad-btn" data-digit="6">6</button>
+        <button class="numpad-btn" data-digit="7">7</button>
+        <button class="numpad-btn" data-digit="8">8</button>
+        <button class="numpad-btn" data-digit="9">9</button>
+        <button class="numpad-btn numpad-back" id="numpad-back">⌫</button>
+        <button class="numpad-btn" data-digit="0">0</button>
+        <button class="numpad-btn numpad-submit" id="numpad-submit">✓</button>
       </div>
 
     </div>
@@ -510,10 +548,27 @@
       // Tap sounds on key buttons
       ['op-toggle', 'st-toggle', 'number-grid', 'stepper-minus', 'stepper-plus',
        'sound-toggle-row', 'exit-btn', 'overlay-cancel', 'overlay-leave',
-       'train-again-btn', 'results-settings-btn'].forEach(id => {
+       'train-again-btn', 'results-settings-btn', 'numpad'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('click', playTap);
       });
+
+      // Wire numpad
+      document.getElementById('numpad').addEventListener('click', e => {
+        if (session.inputLocked) return;
+        const btn = e.target.closest('.numpad-btn');
+        if (!btn) return;
+        if (btn.id === 'numpad-submit') {
+          submitAnswer();
+        } else if (btn.id === 'numpad-back') {
+          answerInput.value = answerInput.value.slice(0, -1);
+        } else if (btn.dataset.digit !== undefined) {
+          if (answerInput.value.length < 3) answerInput.value += btn.dataset.digit;
+        }
+      });
+
+      // Init audio on first touch (iOS requires user gesture before AudioContext)
+      document.addEventListener('touchstart', () => initAudio(), { once: true, passive: true });
     });
 
     // ── Number grid ───────────────────────────────────────────────
@@ -1041,6 +1096,7 @@
 
     // ── submitAnswer ──────────────────────────────────────────────
     function submitAnswer() {
+      initAudio(); // resume AudioContext if iOS suspended it between interactions
       const input = document.getElementById('answer-input');
       const raw = input.value.trim();
       if (!raw) return;
@@ -1123,7 +1179,9 @@
     }
 
     function hideFeedback() {
-      document.getElementById('feedback-bubble').className = 'feedback-bubble';
+      const bubble = document.getElementById('feedback-bubble');
+      bubble.className = 'feedback-bubble';
+      void bubble.offsetHeight; // force repaint — clears Safari GPU ghost border
     }
 
     function triggerShake() {
