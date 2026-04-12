@@ -6,6 +6,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="MathNinja">
+  <meta name="theme-color" content="#1a1a2e">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥷</text></svg>">
   <title>MathNinja</title>
   <style>
     :root {
@@ -28,9 +30,13 @@
       color: var(--text);
       font-family: var(--font);
       -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+      position: fixed;
+      width: 100%;
     }
-    .screen { display: none; min-height: 100vh; }
+    .screen { display: none; min-height: 100vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .screen.active { display: block; }
+    button, input { touch-action: manipulation; }
     .container {
       max-width: 600px;
       margin: 0 auto;
