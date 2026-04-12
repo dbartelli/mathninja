@@ -667,6 +667,29 @@
       return '';
     }
 
+    // ── History (localStorage) ────────────────────────────────────
+    const LS_BEST_RANK   = 'mn_bestRankIndex';
+    const LS_BEST_STREAK = 'mn_bestStreak';
+    const LS_TOTAL       = 'mn_totalSessions';
+
+    function loadHistory() {
+      try {
+        return {
+          bestRankIndex: parseInt(localStorage.getItem(LS_BEST_RANK)  ?? '-1', 10),
+          bestStreak:    parseInt(localStorage.getItem(LS_BEST_STREAK) ?? '0',  10),
+          totalSessions: parseInt(localStorage.getItem(LS_TOTAL)       ?? '0',  10),
+        };
+      } catch(e) { return { bestRankIndex: -1, bestStreak: 0, totalSessions: 0 }; }
+    }
+
+    function saveHistory(rankIndex, streak, total) {
+      try {
+        localStorage.setItem(LS_BEST_RANK,   rankIndex);
+        localStorage.setItem(LS_BEST_STREAK, streak);
+        localStorage.setItem(LS_TOTAL,       total);
+      } catch(e) { /* ignore */ }
+    }
+
     // ── Timer ─────────────────────────────────────────────────────
     function startTimer() {
       updateTimerUI();
@@ -767,7 +790,27 @@
         extra.classList.add('hidden');
       }
 
-      document.getElementById('rank-best').classList.add('hidden');
+      const history      = loadHistory();
+      const isNewBest    = rankIdx > history.bestRankIndex;
+      const newBestStreak = Math.max(session.bestStreak, history.bestStreak);
+      const newTotal     = history.totalSessions + 1;
+
+      saveHistory(
+        Math.max(rankIdx, history.bestRankIndex),
+        newBestStreak,
+        newTotal
+      );
+
+      const rankBest = document.getElementById('rank-best');
+      if (isNewBest && history.bestRankIndex >= 0) {
+        rankBest.textContent = 'Your highest rank yet! 🎉';
+        rankBest.classList.remove('hidden');
+      } else if (history.bestRankIndex < 0) {
+        rankBest.textContent = 'First session complete! 🥷';
+        rankBest.classList.remove('hidden');
+      } else {
+        rankBest.classList.add('hidden');
+      }
 
       showScreen('screen-results');
     }
