@@ -190,6 +190,115 @@
       const target = document.getElementById(id);
       if (target) target.classList.add('active');
     }
+
+    // ── Settings state ──────────────────────────────────────────
+    let settings = {
+      operation: 'multiply',
+      numbers: [2, 3, 4, 6],
+      sessionType: 'problems',
+      sessionValue: 20,
+      muted: false,
+    };
+
+    // ── Stub replaced by Task 4 ───────────────────────────────
+    function loadSettings() { /* defined in Task 4 */ }
+
+    // ── Boot ─────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSettings();
+      renderNumberGrid();
+      syncSettingsUI();
+    });
+
+    // ── Number grid ───────────────────────────────────────────────
+    function renderNumberGrid() {
+      const grid = document.getElementById('number-grid');
+      grid.innerHTML = '';
+      for (let n = 0; n <= 12; n++) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'num-btn' + (settings.numbers.includes(n) ? ' selected' : '');
+        btn.textContent = n;
+        btn.dataset.num = n;
+        btn.setAttribute('aria-pressed', settings.numbers.includes(n) ? 'true' : 'false');
+        btn.addEventListener('click', () => toggleNumber(n));
+        grid.appendChild(btn);
+      }
+      updateDojoBtn();
+    }
+
+    function toggleNumber(n) {
+      if (settings.numbers.includes(n)) {
+        if (settings.numbers.length <= 2) return; // enforce minimum of 2
+        settings.numbers = settings.numbers.filter(x => x !== n);
+      } else {
+        settings.numbers = [...settings.numbers, n].sort((a, b) => a - b);
+      }
+      renderNumberGrid();
+    }
+
+    function updateDojoBtn() {
+      document.getElementById('dojo-btn').disabled = settings.numbers.length < 2;
+    }
+
+    // ── Sync UI to state ─────────────────────────────────────────
+    function syncSettingsUI() {
+      // Operation toggle
+      document.querySelectorAll('#op-toggle .toggle-btn').forEach(btn => {
+        const active = btn.dataset.op === settings.operation;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      // Session type toggle
+      document.querySelectorAll('#st-toggle .toggle-btn').forEach(btn => {
+        const active = btn.dataset.st === settings.sessionType;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      // Session value display
+      const unit = settings.sessionType === 'time' ? ' min' : '';
+      document.getElementById('session-display').textContent = settings.sessionValue + unit;
+      // Sound
+      document.getElementById('sound-icon').textContent = settings.muted ? '🔇' : '🔊';
+      document.getElementById('sound-label').textContent = settings.muted ? 'Sound Off' : 'Sound On';
+      document.getElementById('sound-toggle-row').setAttribute('aria-pressed', settings.muted ? 'true' : 'false');
+    }
+
+    // Wire operation buttons
+    document.querySelectorAll('#op-toggle .toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        settings.operation = btn.dataset.op;
+        syncSettingsUI();
+      });
+    });
+
+    // Wire session type buttons
+    document.querySelectorAll('#st-toggle .toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        settings.sessionType = btn.dataset.st;
+        settings.sessionValue = btn.dataset.st === 'problems' ? 20 : 3;
+        syncSettingsUI();
+      });
+    });
+
+    // Wire stepper
+    document.getElementById('stepper-minus').addEventListener('click', () => adjustSession(-1));
+    document.getElementById('stepper-plus').addEventListener('click', () => adjustSession(1));
+
+    function adjustSession(dir) {
+      if (settings.sessionType === 'problems') {
+        settings.sessionValue = Math.min(50, Math.max(5, settings.sessionValue + dir * 5));
+      } else {
+        settings.sessionValue = Math.min(10, Math.max(1, settings.sessionValue + dir));
+      }
+      syncSettingsUI();
+    }
+
+    // Wire sound toggle
+    document.getElementById('sound-toggle-row').addEventListener('click', () => {
+      settings.muted = !settings.muted;
+      syncSettingsUI();
+    });
   </script>
 
 </body>
