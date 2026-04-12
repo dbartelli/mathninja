@@ -208,6 +208,11 @@
       loadSettings();
       renderNumberGrid();
       syncSettingsUI();
+      // Event delegation for number grid — wired once at boot
+      document.getElementById('number-grid').addEventListener('click', e => {
+        const btn = e.target.closest('.num-btn');
+        if (btn) toggleNumber(Number(btn.dataset.num));
+      });
     });
 
     // ── Number grid ───────────────────────────────────────────────
@@ -221,7 +226,6 @@
         btn.textContent = n;
         btn.dataset.num = n;
         btn.setAttribute('aria-pressed', settings.numbers.includes(n) ? 'true' : 'false');
-        btn.addEventListener('click', () => toggleNumber(n));
         grid.appendChild(btn);
       }
       updateDojoBtn();
