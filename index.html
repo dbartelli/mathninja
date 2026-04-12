@@ -712,6 +712,10 @@
       10: '🔥 10 in a row! 🏆 LEGENDARY. TEN. IN. A. ROW.',
     };
 
+    function isMilestoneStreak(streak) {
+      return streak === 5 || streak === 10 || (streak > 10 && streak % 5 === 0);
+    }
+
     function getFeedbackMessage() {
       if (session.streak >= 3) {
         if (MESSAGES_STREAK[session.streak]) return MESSAGES_STREAK[session.streak];
@@ -753,6 +757,13 @@
     }
 
     // ── Timer ─────────────────────────────────────────────────────
+    function stopTimer() {
+      if (session.timerInterval) {
+        clearInterval(session.timerInterval);
+        session.timerInterval = null;
+      }
+    }
+
     function startTimer() {
       updateTimerUI();
       session.timerInterval = setInterval(() => {
@@ -820,7 +831,7 @@
     }
 
     function endSession() {
-      if (session.timerInterval) { clearInterval(session.timerInterval); session.timerInterval = null; }
+      stopTimer();
       playComplete();
 
       const total   = session.attempted;
@@ -846,8 +857,14 @@
       const extra = document.getElementById('extra-training');
       if (session.revealedFacts.length > 0) {
         extra.classList.remove('hidden');
-        document.getElementById('extra-facts').innerHTML =
-          session.revealedFacts.map(f => `<span class="fact-pill">${f}</span>`).join('');
+        const factsEl = document.getElementById('extra-facts');
+        factsEl.innerHTML = '';
+        session.revealedFacts.forEach(f => {
+          const pill = document.createElement('span');
+          pill.className = 'fact-pill';
+          pill.textContent = f;
+          factsEl.appendChild(pill);
+        });
       } else {
         extra.classList.add('hidden');
       }
@@ -912,6 +929,8 @@
       return problems;
     }
 
+    const OP_LABELS = { multiply:'MULTIPLICATION', divide:'DIVISION', mix:'MIXED' };
+
     function buildDeck(operation, numbers) {
       let problems = [];
       if (operation === 'multiply') problems = buildMultiplyProblems(numbers);
@@ -933,7 +952,7 @@
       revealedFacts: [], attempted: 0,
       timeRemaining: 0, timerInterval: null, timerExpired: false,
       inputLocked: false,
-      msgPool: [], msgIndex: 0,
+      msgPool: [],
     };
 
     function enterDojo() {
@@ -948,9 +967,8 @@
       session.revealed = 0; session.revealedFacts = [];
       session.attempted = 0; session.inputLocked = false;
       session.timerExpired = false;
-      if (session.timerInterval) clearInterval(session.timerInterval);
-      session.timerInterval = null;
-      session.msgPool = []; session.msgIndex = 0;
+      stopTimer();
+      session.msgPool = [];
 
       if (settings.sessionType === 'time') {
         session.timeRemaining = settings.sessionValue * 60;
@@ -970,8 +988,7 @@
       const p = session.deck[session.deckIndex];
       session.tries = 0;
 
-      const opNames = { multiply:'MULTIPLICATION', divide:'DIVISION', mix:'MIXED' };
-      document.getElementById('op-label').textContent = opNames[p.type] || 'MULTIPLICATION';
+      document.getElementById('op-label').textContent = OP_LABELS[p.type];
       document.getElementById('problem-text').textContent = p.display;
 
       const eq = document.getElementById('problem-eq');
@@ -1033,9 +1050,7 @@
         eq.className = 'problem-eq correct';
 
         showFeedback('correct', getFeedbackMessage(), getStreakSub());
-        if (session.tries === 1 &&
-            (session.streak === 5 || session.streak === 10 ||
-             (session.streak > 10 && session.streak % 5 === 0))) {
+        if (session.tries === 1 && isMilestoneStreak(session.streak)) {
           playMilestone();
         } else {
           playCorrect();
@@ -1130,7 +1145,7 @@
     });
     document.getElementById('overlay-leave').addEventListener('click', () => {
       document.getElementById('exit-overlay').classList.remove('visible');
-      if (session.timerInterval) clearInterval(session.timerInterval);
+      stopTimer();
       showScreen('screen-settings');
     });
 
