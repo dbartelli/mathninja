@@ -528,9 +528,56 @@
     function playComplete()  {}
     function playTap()       {}
 
-    // ── Message stubs (replaced in Task 8) ───────────────────────
-    function getFeedbackMessage() { return '✅ Correct!'; }
-    function getStreakSub()       { return ''; }
+    // ── Message pools ─────────────────────────────────────────────
+    const MESSAGES_SOLO = [
+      'Your brain is a weapon.',
+      'That problem never stood a chance.',
+      'Math agrees with you.',
+      'Boom. 💥',
+      'Easy for a ninja.',
+      "Was that even hard? Didn't think so.",
+      'The answer feared you.',
+      'Clean. Sharp. Correct.',
+      "Calculator? You don't need one.",
+      'Facts only. 🔥',
+      'Zero hesitation. Full marks.',
+      'Did you even blink?',
+      'Smooth.',
+      'Your brain just did a backflip.',
+      "That fact didn't even have time to be nervous.",
+      "If math were a video game, you'd be at the final boss.",
+      'Even the hard ones are easy for you. Suspicious.',
+      'That one was a trap. You walked right through it.',
+      '12 × 12 is sweating right now.',
+    ];
+
+    const MESSAGES_STREAK = {
+      3:  "🔥 3 in a row! You're on fire!",
+      4:  '🔥 4 in a row! The numbers are scared.',
+      5:  '🔥 5 in a row! Full ninja mode activated.',
+      6:  '🔥 6 in a row! Unstoppable.',
+      7:  '🔥 7 in a row! Is this even fair?',
+      8:  '🔥 8 in a row! You might actually be a robot. A cool robot.',
+      9:  '🔥 9 in a row! The dojo bows before you.',
+      10: '🔥 10 in a row! 🏆 LEGENDARY. TEN. IN. A. ROW.',
+    };
+
+    function getFeedbackMessage() {
+      if (session.streak >= 3) {
+        if (MESSAGES_STREAK[session.streak]) return MESSAGES_STREAK[session.streak];
+        if (session.streak > 10 && session.streak % 5 === 0)
+          return `🔥 ${session.streak} in a row! Stop showing off. (Actually don't.)`;
+      }
+      if (session.msgPool.length === 0) {
+        session.msgPool = shuffle([...Array(MESSAGES_SOLO.length).keys()]);
+      }
+      return MESSAGES_SOLO[session.msgPool.pop()];
+    }
+
+    function getStreakSub() {
+      if (session.streak >= 5) return `${session.streak} in a row! 🔥`;
+      return '';
+    }
 
     // ── Session end stub (replaced in Task 9) ────────────────────
     function endSession() {}
@@ -691,7 +738,13 @@
         eq.className = 'problem-eq correct';
 
         showFeedback('correct', getFeedbackMessage(), getStreakSub());
-        playCorrect();
+        if (session.tries === 1 &&
+            (session.streak === 5 || session.streak === 10 ||
+             (session.streak > 10 && session.streak % 5 === 0))) {
+          playMilestone();
+        } else {
+          playCorrect();
+        }
         lockAndAdvance(1200);
 
       } else if (session.tries < 2) {
