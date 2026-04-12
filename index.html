@@ -191,6 +191,10 @@
       if (target) target.classList.add('active');
     }
 
+    // ── localStorage constants ────────────────────────────────
+    const LS_SETTINGS = 'mn_lastSettings';
+    const LS_MUTED    = 'mn_muted';
+
     // ── Settings state ──────────────────────────────────────────
     let settings = {
       operation: 'multiply',
@@ -200,8 +204,47 @@
       muted: false,
     };
 
-    // ── Stub replaced by Task 4 ───────────────────────────────
-    function loadSettings() { /* defined in Task 4 */ }
+    // ── Load settings from localStorage ─────────────────────────
+    function loadSettings() {
+      try {
+        const raw = localStorage.getItem(LS_SETTINGS);
+        if (raw) {
+          const saved = JSON.parse(raw);
+          if (['multiply','divide','mix'].includes(saved.operation)) {
+            settings.operation = saved.operation;
+          }
+          if (Array.isArray(saved.numbers) && saved.numbers.length >= 2) {
+            settings.numbers = saved.numbers.filter(n => Number.isInteger(n) && n >= 0 && n <= 12);
+            if (settings.numbers.length < 2) settings.numbers = [2, 3, 4, 6];
+          }
+          if (['problems','time'].includes(saved.sessionType)) {
+            settings.sessionType = saved.sessionType;
+          }
+          if (Number.isInteger(saved.sessionValue)) {
+            if (settings.sessionType === 'problems') {
+              settings.sessionValue = Math.min(50, Math.max(5, Math.round(saved.sessionValue / 5) * 5));
+            } else {
+              settings.sessionValue = Math.min(10, Math.max(1, saved.sessionValue));
+            }
+          }
+        }
+        const muted = localStorage.getItem(LS_MUTED);
+        if (muted !== null) settings.muted = muted === 'true';
+      } catch (_) {}
+    }
+
+    // ── Save settings to localStorage ───────────────────────────
+    function saveSettings() {
+      try {
+        localStorage.setItem(LS_SETTINGS, JSON.stringify({
+          operation:    settings.operation,
+          numbers:      settings.numbers,
+          sessionType:  settings.sessionType,
+          sessionValue: settings.sessionValue,
+        }));
+        localStorage.setItem(LS_MUTED, settings.muted);
+      } catch (_) {}
+    }
 
     // ── Boot ─────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
@@ -239,6 +282,7 @@
         settings.numbers = [...settings.numbers, n].sort((a, b) => a - b);
       }
       renderNumberGrid();
+      saveSettings();
     }
 
     function updateDojoBtn() {
@@ -273,6 +317,7 @@
       btn.addEventListener('click', () => {
         settings.operation = btn.dataset.op;
         syncSettingsUI();
+        saveSettings();
       });
     });
 
@@ -282,6 +327,7 @@
         settings.sessionType = btn.dataset.st;
         settings.sessionValue = btn.dataset.st === 'problems' ? 20 : 3;
         syncSettingsUI();
+        saveSettings();
       });
     });
 
@@ -296,12 +342,14 @@
         settings.sessionValue = Math.min(10, Math.max(1, settings.sessionValue + dir));
       }
       syncSettingsUI();
+      saveSettings();
     }
 
     // Wire sound toggle
     document.getElementById('sound-toggle-row').addEventListener('click', () => {
       settings.muted = !settings.muted;
       syncSettingsUI();
+      saveSettings();
     });
   </script>
 
