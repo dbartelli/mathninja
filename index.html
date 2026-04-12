@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MathNinja">
+  <title>MathNinja</title>
+  <style>
+    :root {
+      --bg:    #1a1a2e;
+      --bg2:   #16213e;
+      --bg3:   #2a2a4e;
+      --red:   #e94560;
+      --teal:  #00b4d8;
+      --gold:  #ffd166;
+      --green: #4ade80;
+      --text:  #e0e0e0;
+      --muted: #555555;
+      --font:  system-ui, -apple-system, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: block; }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 24px 20px 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="screen-settings" class="screen active">
+    <div class="container">
+      <p style="color:var(--teal)">Settings screen — coming soon</p>
+    </div>
+  </div>
+
+  <div id="screen-practice" class="screen">
+    <div class="container">
+      <p style="color:var(--teal)">Practice screen — coming soon</p>
+    </div>
+  </div>
+
+  <div id="screen-results" class="screen">
+    <div class="container">
+      <p style="color:var(--teal)">Results screen — coming soon</p>
+    </div>
+  </div>
+
+  <script>
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+  </script>
+
+</body>
+</html>
