@@ -695,6 +695,13 @@
       if (!audioCtx) {
         try {
           audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          // Play a silent 1-frame buffer immediately — required to unlock
+          // audio on iPhone Safari (iPad and Mac are more permissive)
+          const buf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
+          const src = audioCtx.createBufferSource();
+          src.buffer = buf;
+          src.connect(audioCtx.destination);
+          src.start(0);
         } catch(e) { audioCtx = null; }
       }
       if (audioCtx && audioCtx.state === 'suspended') {
@@ -1067,6 +1074,9 @@
       document.getElementById('answer-input').value = '';
       session.inputLocked = false;
       updateProgressUI();
+      // With inputmode="none" the keyboard never appears, so focus() works
+      // from setTimeout on iOS — it just shows the cursor with no keyboard popup
+      answerInput.focus();
     }
 
     function currentProblem() {
@@ -1132,6 +1142,7 @@
         triggerShake();
         showFeedback('wrong', 'Try Again! 💪', '1 try left');
         playWrong1();
+        answerInput.focus(); // still in gesture chain — re-focus for next attempt
 
       } else {
         session.revealed++;
