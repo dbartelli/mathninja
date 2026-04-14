@@ -1,12 +1,13 @@
 # MathNinja 🥷
 
-**v1.1** · A math facts practice app for 2nd and 3rd graders. Built for Diego's Math Dojo.
+**v1.2** · A math facts practice app for 2nd and 3rd graders. Built for Diego's Math Dojo.
 
 **[Play it →](https://dbartelli.github.io/mathninja/)**
 
 ## What it does
 
 - Multiplication, division, or mixed practice for numbers 0–12
+- **Single Number Power Mode** — select just one number to focus on all facts for that number (e.g. pick 8 to practice 0×8 through 12×8 in both orderings)
 - Two modes: fixed number of problems (5–50) or timed sessions (1–10 min)
 - Two tries per problem before the answer is revealed
 - Streak tracking with milestone messages
