@@ -665,7 +665,18 @@
     }
 
     function updateDojoBtn() {
-      document.getElementById('dojo-btn').disabled = settings.numbers.length < 2;
+      const n = settings.numbers.length;
+      const singleZeroDivide = n === 1 && settings.numbers[0] === 0
+        && (settings.operation === 'divide' || settings.operation === 'mix');
+      document.getElementById('dojo-btn').disabled = n < 1 || singleZeroDivide;
+
+      const hint = document.getElementById('grid-hint');
+      if (n === 1) {
+        const X = settings.numbers[0];
+        hint.textContent = `⚡ Single Number Power Mode — crushing the ${X} facts!`;
+      } else {
+        hint.textContent = '';
+      }
     }
 
     // ── Sync UI to state ─────────────────────────────────────────
