@@ -1079,6 +1079,21 @@
 
     // ── Problem generation ───────────────────────────────────────
     function buildMultiplyProblems(numbers) {
+      // Single-number mode: pair X against full 0–12 range, both orderings
+      if (numbers.length === 1) {
+        const X = numbers[0];
+        const problems = [];
+        for (let n = 0; n <= 12; n++) {
+          problems.push({ type:'multiply', a:n, b:X, answer:n*X,
+            display:`${n} × ${X}`, key:`${n}×${X}` });
+          if (n !== X) {
+            problems.push({ type:'multiply', a:X, b:n, answer:X*n,
+              display:`${X} × ${n}`, key:`${X}×${n}` });
+          }
+        }
+        return problems;
+      }
+      // Multi-number mode: original cross-product
       const problems = [];
       for (const a of numbers) {
         for (const b of numbers) {
@@ -1090,6 +1105,20 @@
     }
 
     function buildDivideProblems(numbers) {
+      // Single-number mode: X is always the divisor, answers span 1–12 excluding X
+      if (numbers.length === 1) {
+        const X = numbers[0];
+        if (X === 0) return []; // cannot divide by zero
+        const problems = [];
+        for (let n = 1; n <= 12; n++) {
+          if (n === X) continue; // answer must not equal divisor
+          const dividend = n * X;
+          problems.push({ type:'divide', a:dividend, b:X, answer:n,
+            display:`${dividend} ÷ ${X}`, key:`${dividend}÷${X}` });
+        }
+        return problems;
+      }
+      // Multi-number mode: original cross-product
       const problems = [];
       const nonZero = numbers.filter(n => n !== 0);
       for (const answer of nonZero) {
