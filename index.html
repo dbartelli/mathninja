@@ -745,7 +745,7 @@
 
     // Wire dojo button — focus must happen synchronously inside the gesture for iOS
     document.getElementById('dojo-btn').addEventListener('click', () => {
-      if (settings.numbers.length < 2) return;
+      if (settings.numbers.length < 1) return;
       enterDojo();
       document.getElementById('answer-input').focus();
     });
@@ -1168,7 +1168,7 @@
     };
 
     function enterDojo() {
-      if (settings.numbers.length < 2) return;
+      if (settings.numbers.length < 1) return;
       saveSettings();
       initAudio();
 
