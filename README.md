@@ -1,6 +1,6 @@
 # MathNinja 🥷
 
-A math facts practice app for 2nd and 3rd graders. Built for Diego's Math Dojo.
+**v1.1** · A math facts practice app for 2nd and 3rd graders. Built for Diego's Math Dojo.
 
 **[Play it →](https://dbartelli.github.io/mathninja/)**
 
