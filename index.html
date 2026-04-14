@@ -707,6 +707,7 @@
       btn.addEventListener('click', () => {
         settings.operation = btn.dataset.op;
         syncSettingsUI();
+        updateDojoBtn();
         saveSettings();
       });
     });
