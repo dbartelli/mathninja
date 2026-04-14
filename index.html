@@ -1232,7 +1232,7 @@
           playCorrect();
         }
         const words = msg.trim().split(/\s+/).length;
-        const delay = words <= 2 ? 1500 : words <= 4 ? 2100 : 4000;
+        const delay = words <= 2 ? 1500 : words <= 4 ? 2000 : 3000;
         lockAndAdvance(delay);
 
       } else if (session.tries < 2) {
