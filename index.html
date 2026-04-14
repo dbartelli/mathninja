@@ -875,34 +875,30 @@
       'Dialed in. 📡',
       'Built different. 🏗️',
       'Undefeated. 🥊',
-      'Chef's kiss. 🤌',
+      'Chef\u2019s kiss. 🤌',
+      'The dojo bows to you. 🙇',
+      'Stop showing off. (Actually don\u2019t.) 😏',
+      'Unstoppable. 🚂',
+      'Ninja mode activated. 🥷',
     ];
-
-    const MESSAGES_STREAK = {
-      3:  "🔥 3 in a row! You're on fire!",
-      4:  '🔥 4 in a row! The numbers are scared.',
-      5:  '🔥 5 in a row! Full ninja mode activated.',
-      6:  '🔥 6 in a row! Unstoppable.',
-      7:  '🔥 7 in a row! Is this even fair?',
-      8:  '🔥 8 in a row! You might actually be a robot. A cool robot.',
-      9:  '🔥 9 in a row! The dojo bows before you.',
-      10: '🔥 10 in a row! 🏆 LEGENDARY. TEN. IN. A. ROW.',
-    };
 
     function isMilestoneStreak(streak) {
       return streak === 5 || streak === 10 || (streak > 10 && streak % 5 === 0);
     }
 
-    function getFeedbackMessage() {
-      if (session.streak >= 3) {
-        if (MESSAGES_STREAK[session.streak]) return MESSAGES_STREAK[session.streak];
-        if (session.streak > 10 && session.streak % 5 === 0)
-          return `🔥 ${session.streak} in a row! Stop showing off. (Actually don't.)`;
-      }
+    function getSoloMessage() {
       if (session.msgPool.length === 0) {
         session.msgPool = shuffle([...Array(MESSAGES_SOLO.length).keys()]);
       }
       return MESSAGES_SOLO[session.msgPool.pop()];
+    }
+
+    function getFeedbackMessage() {
+      const solo = getSoloMessage();
+      if (session.streak >= 3) {
+        return `🔥 ${session.streak} in a row! ${solo}`;
+      }
+      return solo;
     }
 
     function getStreakSub() {
