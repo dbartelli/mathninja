@@ -10,6 +10,7 @@ A math facts practice app for 2nd and 3rd graders. Built for Diego's Math Dojo.
 - Two modes: fixed number of problems (5–50) or timed sessions (1–10 min)
 - Two tries per problem before the answer is revealed
 - Streak tracking with milestone messages
+- Positive reinforcement messages display longer when the message is longer — giving young readers enough time to read it; a ⏭ skip button lets kids advance early if they're ready
 - Results screen with rank badge (White Belt → Grand Master) based on first-try accuracy
 - Sound effects via Web Audio API with mute toggle
 - Settings and personal bests persist across sessions via localStorage
