@@ -230,6 +230,17 @@
     .feedback-bubble.correct .fb-sub  { color: var(--green); }
     .feedback-bubble.wrong   .fb-sub  { color: var(--red);   }
     .feedback-bubble.reveal  .fb-sub  { color: var(--gold);  }
+    .fb-inner { display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .fb-text  { flex: 1; }
+    .fb-skip  {
+      display: none; background: none; border: none; cursor: pointer;
+      font-size: 22px; padding: 0; min-width: 44px; min-height: 44px;
+      align-items: center; justify-content: center; opacity: 0.7;
+      flex-shrink: 0;
+    }
+    .fb-skip:active { opacity: 1; }
+    .feedback-bubble.correct .fb-skip,
+    .feedback-bubble.reveal  .fb-skip { display: flex; }
 
     /* ── About button ── */
     .about-btn {
@@ -426,8 +437,13 @@
           spellcheck="false" maxlength="3" placeholder="?">
 
         <div class="feedback-bubble" id="feedback-bubble">
-          <div class="fb-main" id="fb-main"></div>
-          <div class="fb-sub"  id="fb-sub"></div>
+          <div class="fb-inner">
+            <div class="fb-text">
+              <div class="fb-main" id="fb-main"></div>
+              <div class="fb-sub"  id="fb-sub"></div>
+            </div>
+            <button class="fb-skip" id="fb-skip" aria-label="Skip to next problem">⏭</button>
+          </div>
         </div>
       </div>
 
@@ -1061,7 +1077,7 @@
       firstTryCorrect: 0, secondTryCorrect: 0, revealed: 0,
       revealedFacts: [], attempted: 0,
       timeRemaining: 0, timerInterval: null, timerExpired: false,
-      inputLocked: false,
+      inputLocked: false, advanceTimer: null,
       msgPool: [],
     };
 
@@ -1075,7 +1091,7 @@
       session.tries = 0; session.streak = 0; session.bestStreak = 0;
       session.firstTryCorrect = 0; session.secondTryCorrect = 0;
       session.revealed = 0; session.revealedFacts = [];
-      session.attempted = 0; session.inputLocked = false;
+      session.attempted = 0; session.inputLocked = false; session.advanceTimer = null;
       session.timerExpired = false;
       stopTimer();
       session.msgPool = [];
@@ -1163,13 +1179,16 @@
         eq.textContent = `= ${p.answer} ✓`;
         eq.className = 'problem-eq correct';
 
-        showFeedback('correct', getFeedbackMessage(), getStreakSub());
+        const msg = getFeedbackMessage();
+        showFeedback('correct', msg, getStreakSub());
         if (session.tries === 1 && isMilestoneStreak(session.streak)) {
           playMilestone();
         } else {
           playCorrect();
         }
-        lockAndAdvance(1200);
+        const words = msg.trim().split(/\s+/).length;
+        const delay = words <= 2 ? 1500 : words <= 4 ? 2100 : 4000;
+        lockAndAdvance(delay);
 
       } else if (session.tries < 2) {
         input.value = '';
@@ -1191,7 +1210,7 @@
 
         showFeedback('reveal', `The answer is ${p.answer}!`, "You'll get it next time 🥷");
         playReveal();
-        lockAndAdvance(1800);
+        lockAndAdvance(3000);
       }
 
       updateProgressUI();
@@ -1201,11 +1220,22 @@
     function lockAndAdvance(delay) {
       session.inputLocked = true;
       document.getElementById('answer-input').value = '';
-      setTimeout(() => {
+      session.advanceTimer = setTimeout(() => {
+        session.advanceTimer = null;
         if (isSessionOver()) { endSession(); return; }
         loadNextProblem();
       }, delay);
     }
+
+    document.getElementById('fb-skip').addEventListener('click', () => {
+      if (!session.inputLocked) return;
+      if (session.advanceTimer) {
+        clearTimeout(session.advanceTimer);
+        session.advanceTimer = null;
+      }
+      if (isSessionOver()) { endSession(); return; }
+      loadNextProblem();
+    });
 
     function isSessionOver() {
       if (session.timerExpired) return true;
