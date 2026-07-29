@@ -1100,12 +1100,23 @@
     }
 
     // ── Problem generation ───────────────────────────────────────
+    // Partner values the student has opted to skip in single-number mode.
+    // Never filters the selected number itself — only its partner.
+    function excludedPartners() {
+      const out = [];
+      if (settings.skipEasy01)   out.push(0, 1);
+      if (settings.skipEasy2Etc) out.push(2, 10, 11);
+      return out;
+    }
+
     function buildMultiplyProblems(numbers) {
       // Single-number mode: pair X against full 0–12 range, both orderings
       if (numbers.length === 1) {
         const X = numbers[0];
+        const skip = excludedPartners();
         const problems = [];
         for (let n = 0; n <= 12; n++) {
+          if (skip.includes(n)) continue;
           problems.push({ type:'multiply', a:n, b:X, answer:n*X,
             display:`${n} × ${X}`, key:`${n}×${X}` });
           if (n !== X) {
@@ -1131,9 +1142,11 @@
       if (numbers.length === 1) {
         const X = numbers[0];
         if (X === 0) return []; // cannot divide by zero
+        const skip = excludedPartners();
         const problems = [];
         for (let n = 1; n <= 12; n++) {
           if (n === X) continue; // answer must not equal divisor
+          if (skip.includes(n)) continue; // quotient is an opted-out easy partner
           const dividend = n * X;
           problems.push({ type:'divide', a:dividend, b:X, answer:n,
             display:`${dividend} ÷ ${X}`, key:`${dividend}÷${X}` });
