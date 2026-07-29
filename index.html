@@ -97,6 +97,27 @@
     .num-btn.all-active { border-color: var(--gold); color: var(--gold); }
     .grid-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: 8px; }
 
+    /* ── Skip-easy chips (single-number mode only) ── */
+    .skip-easy { display: none; margin-top: 12px; }
+    .skip-easy.visible { display: block; }
+    .skip-easy-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--muted);
+      text-align: center; margin-bottom: 8px;
+    }
+    .skip-chips { display: flex; gap: 8px; }
+    .skip-chip {
+      flex: 1; background: var(--bg2); color: var(--muted);
+      border: 2px solid var(--bg3); border-radius: 10px;
+      padding: 10px 8px; font-size: 13px; font-weight: 800;
+      font-family: var(--font); cursor: pointer;
+      min-height: 44px; transition: all 0.15s;
+    }
+    .skip-chip.active {
+      background: var(--red); color: white; border-color: var(--red);
+      text-decoration: line-through;
+    }
+
     /* ── Session stepper ── */
     .session-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
     .stepper { display: flex; align-items: center; gap: 10px; }
@@ -367,6 +388,13 @@
         <legend class="setting-label">🎯 Numbers to Train</legend>
         <div class="number-grid" id="number-grid"></div>
         <p class="grid-hint" id="grid-hint"></p>
+        <div class="skip-easy" id="skip-easy">
+          <p class="skip-easy-label">Skip the easy ones</p>
+          <div class="skip-chips">
+            <button type="button" class="skip-chip" id="skip-chip-01" aria-pressed="false"></button>
+            <button type="button" class="skip-chip" id="skip-chip-2etc" aria-pressed="false"></button>
+          </div>
+        </div>
       </fieldset>
 
       <!-- Session length -->
@@ -606,7 +634,7 @@
       });
 
       // Tap sounds on key buttons
-      ['op-toggle', 'st-toggle', 'number-grid', 'stepper-minus', 'stepper-plus',
+      ['op-toggle', 'st-toggle', 'number-grid', 'skip-easy', 'stepper-minus', 'stepper-plus',
        'sound-toggle-row', 'about-btn', 'about-close', 'exit-btn', 'overlay-cancel', 'overlay-leave',
        'train-again-btn', 'results-settings-btn', 'numpad'].forEach(id => {
         const el = document.getElementById(id);
@@ -656,6 +684,7 @@
       allBtn.setAttribute('aria-pressed', allSelected() ? 'true' : 'false');
       grid.appendChild(allBtn);
       updateDojoBtn();
+      renderSkipChips();
     }
 
     function toggleNumber(n) {
@@ -745,6 +774,39 @@
       syncSettingsUI();
       saveSettings();
     }
+
+    // ── Skip-easy chips ──────────────────────────────────────────
+    // Visible only in single-number mode; labels name the selected number
+    // so it is unambiguous that the groups apply to its partner.
+    function renderSkipChips() {
+      const box = document.getElementById('skip-easy');
+      const single = settings.numbers.length === 1;
+      box.classList.toggle('visible', single);
+      if (!single) return;
+
+      const X = settings.numbers[0];
+      const chips = [
+        [document.getElementById('skip-chip-01'),   `${X} × 0, 1`,       settings.skipEasy01],
+        [document.getElementById('skip-chip-2etc'), `${X} × 2, 10, 11`,  settings.skipEasy2Etc],
+      ];
+      chips.forEach(([el, label, on]) => {
+        el.textContent = label;
+        el.classList.toggle('active', on);
+        el.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    }
+
+    document.getElementById('skip-chip-01').addEventListener('click', () => {
+      settings.skipEasy01 = !settings.skipEasy01;
+      renderSkipChips();
+      saveSettings();
+    });
+
+    document.getElementById('skip-chip-2etc').addEventListener('click', () => {
+      settings.skipEasy2Etc = !settings.skipEasy2Etc;
+      renderSkipChips();
+      saveSettings();
+    });
 
     // Wire sound toggle
     document.getElementById('sound-toggle-row').addEventListener('click', () => {
