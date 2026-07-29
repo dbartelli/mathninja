@@ -101,10 +101,22 @@
     .skip-easy { display: none; margin-top: 12px; }
     .skip-easy.visible { display: block; }
     .skip-easy-label {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
       font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
       text-transform: uppercase; color: var(--muted);
-      text-align: center; margin-bottom: 8px;
+      margin-bottom: 8px;
     }
+    .skip-info-btn {
+      background: none; border: none; color: var(--muted);
+      font-size: 14px; cursor: pointer; padding: 4px; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .skip-info-btn:hover { color: var(--text); }
+    .skip-info-text {
+      display: none; font-size: 12px; color: var(--muted); line-height: 1.4;
+      text-align: center; margin: -2px 4px 10px;
+    }
+    .skip-info-text.visible { display: block; }
     .skip-chips { display: flex; gap: 8px; }
     .skip-chip {
       flex: 1; background: var(--bg2); color: var(--muted);
@@ -389,7 +401,16 @@
         <div class="number-grid" id="number-grid"></div>
         <p class="grid-hint" id="grid-hint"></p>
         <div class="skip-easy" id="skip-easy">
-          <p class="skip-easy-label">Skip the easy ones</p>
+          <p class="skip-easy-label">
+            Skip the easy ones
+            <button type="button" class="skip-info-btn" id="skip-info-btn"
+              aria-label="What does this do?" aria-expanded="false">ⓘ</button>
+          </p>
+          <p class="skip-info-text" id="skip-info-text">
+            Tap a button below to stop practicing those facts this session — turning on
+            the first one skips every problem that pairs your number with 0 or 1, in
+            either order.
+          </p>
           <div class="skip-chips">
             <button type="button" class="skip-chip" id="skip-chip-01" aria-pressed="false"></button>
             <button type="button" class="skip-chip" id="skip-chip-2etc" aria-pressed="false"></button>
@@ -782,7 +803,11 @@
       const box = document.getElementById('skip-easy');
       const single = settings.numbers.length === 1;
       box.classList.toggle('visible', single);
-      if (!single) return;
+      if (!single) {
+        document.getElementById('skip-info-text').classList.remove('visible');
+        document.getElementById('skip-info-btn').setAttribute('aria-expanded', 'false');
+        return;
+      }
 
       const X = settings.numbers[0];
       const chips = [
@@ -806,6 +831,12 @@
       settings.skipEasy2Etc = !settings.skipEasy2Etc;
       renderSkipChips();
       saveSettings();
+    });
+
+    document.getElementById('skip-info-btn').addEventListener('click', () => {
+      const text = document.getElementById('skip-info-text');
+      const showing = text.classList.toggle('visible');
+      document.getElementById('skip-info-btn').setAttribute('aria-expanded', showing ? 'true' : 'false');
     });
 
     // Wire sound toggle
