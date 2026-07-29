@@ -8,7 +8,7 @@
 
 - Multiplication, division, or mixed practice for numbers 0–12
 - **Single Number Power Mode** — select just one number to focus on all facts for that number (e.g. pick 8 to practice 0×8 through 12×8 in both orderings)
-- **Skip the easy ones** — in Single Number Power Mode, optionally exclude the trivial `×0, ×1` facts and/or the shortcut `×2, ×10, ×11` facts so practice time goes to the facts still being learned
+- **Skip the easy ones** — in Single Number Power Mode, optionally exclude the trivial `×0, ×1` facts and/or the shortcut `×2, ×10, ×11` facts (division facts built from the same numbers are skipped too) so practice time goes to the facts still being learned
 - Two modes: fixed number of problems (5–50) or timed sessions (1–10 min)
 - Two tries per problem before the answer is revealed
 - Streak tracking with milestone messages
@@ -36,7 +36,7 @@ cd mathninja
 open index.html
 ```
 
-To test locally, just open `index.html` directly in a browser — there's no build step or server-side code, so double-clicking the file (or `open index.html` above) is enough. Reload the tab after each edit to pick up changes.
+There's no build step or server-side code — reload the tab after each edit to pick up changes.
 
 If you want it served over `http://` instead of `file://` (closer to how GitHub Pages serves it, and needed if you ever add features that require it), run a throwaway local server from the project root instead:
 

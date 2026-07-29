@@ -107,10 +107,12 @@
       margin-bottom: 8px;
     }
     .skip-info-btn {
+      position: relative;
       background: none; border: none; color: var(--muted);
       font-size: 14px; cursor: pointer; padding: 4px; line-height: 1;
       display: flex; align-items: center; justify-content: center;
     }
+    .skip-info-btn::after { content: ''; position: absolute; inset: -15px; }
     .skip-info-btn:hover { color: var(--text); }
     .skip-info-text {
       display: none; font-size: 12px; color: var(--muted); line-height: 1.4;
@@ -404,12 +406,12 @@
           <p class="skip-easy-label">
             Skip the easy ones
             <button type="button" class="skip-info-btn" id="skip-info-btn"
-              aria-label="What does this do?" aria-expanded="false">ⓘ</button>
+              aria-label="What does this do?" aria-expanded="false" aria-controls="skip-info-text">ⓘ</button>
           </p>
           <p class="skip-info-text" id="skip-info-text">
-            Tap a button below to stop practicing those facts this session — turning on
-            the first one skips every problem that pairs your number with 0 or 1, in
-            either order.
+            Turn one on to stop practicing those facts — the first skips every problem
+            pairing your number with 0 or 1, the second skips 2, 10, and 11. Works for
+            division too (16 ÷ 8 counts as a × 2 fact). Your choice is saved.
           </p>
           <div class="skip-chips">
             <button type="button" class="skip-chip" id="skip-chip-01" aria-pressed="false"></button>
@@ -818,6 +820,7 @@
         el.textContent = label;
         el.classList.toggle('active', on);
         el.setAttribute('aria-pressed', on ? 'true' : 'false');
+        el.setAttribute('aria-label', `Skip ${label}`);
       });
     }
 
@@ -833,10 +836,11 @@
       saveSettings();
     });
 
-    document.getElementById('skip-info-btn').addEventListener('click', () => {
+    const skipInfoBtn = document.getElementById('skip-info-btn');
+    skipInfoBtn.addEventListener('click', () => {
       const text = document.getElementById('skip-info-text');
       const showing = text.classList.toggle('visible');
-      document.getElementById('skip-info-btn').setAttribute('aria-expanded', showing ? 'true' : 'false');
+      skipInfoBtn.setAttribute('aria-expanded', showing ? 'true' : 'false');
     });
 
     // Wire sound toggle
