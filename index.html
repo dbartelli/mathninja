@@ -539,6 +539,8 @@
       numbers: [],
       sessionType: 'problems',
       sessionValue: 20,
+      skipEasy01: false,
+      skipEasy2Etc: false,
       muted: false,
     };
 
@@ -564,6 +566,12 @@
               settings.sessionValue = Math.min(10, Math.max(1, saved.sessionValue));
             }
           }
+          if (typeof saved.skipEasy01 === 'boolean') {
+            settings.skipEasy01 = saved.skipEasy01;
+          }
+          if (typeof saved.skipEasy2Etc === 'boolean') {
+            settings.skipEasy2Etc = saved.skipEasy2Etc;
+          }
         }
         const muted = localStorage.getItem(LS_MUTED);
         if (muted !== null) settings.muted = muted === 'true';
@@ -578,6 +586,8 @@
           numbers:      settings.numbers,
           sessionType:  settings.sessionType,
           sessionValue: settings.sessionValue,
+          skipEasy01:   settings.skipEasy01,
+          skipEasy2Etc: settings.skipEasy2Etc,
         }));
         localStorage.setItem(LS_MUTED, settings.muted);
       } catch (_) {}
