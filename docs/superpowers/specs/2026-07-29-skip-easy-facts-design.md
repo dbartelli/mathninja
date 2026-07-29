@@ -108,9 +108,10 @@ problems" state is required. The existing reshuffle-on-exhaustion in
 Inside the existing "🎯 Numbers to Train" fieldset, directly below the number
 grid and beneath the existing Single Number Power Mode hint line.
 
-Rendered **only when exactly one number is selected**. In multi-number mode the
-controls are absent from the DOM entirely, which is what keeps the settings
-screen from getting cluttered — they are invisible in the common case.
+Shown **only when exactly one number is selected**, hidden via a CSS class the
+same way `.extra-training` and `.streak-badge` already work. In multi-number mode
+the controls are invisible, which is what keeps the settings screen from getting
+cluttered — they are absent in the common case.
 
 ### Layout
 
